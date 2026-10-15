@@ -103,7 +103,6 @@ export const handleGraphqlMetaErrors = (meta: WfoGraphqlErrorsMeta, responseHasI
   }
 };
 
-const isUnauthorized = (status: HttpStatus) => status === HttpStatus.Unauthorized || status === HttpStatus.Forbidden;
 const isNotSuccessful = (status: HttpStatus) => status < HttpStatus.Ok || status >= HttpStatus.MultipleChoices;
 
 export const catchErrorResponse = async (response: Response, authActive: boolean) => {
@@ -112,7 +111,8 @@ export const catchErrorResponse = async (response: Response, authActive: boolean
   if (isNotSuccessful(status)) {
     console.error(status, response.body);
   }
-  if (isUnauthorized(status) && authActive) {
+  // 403 is an authorization denial for a logged-in user; only 401 means the session is gone.
+  if (status === HttpStatus.Unauthorized && authActive) {
     signOut();
   } else if (status === HttpStatus.NoContent) {
     return {};
@@ -168,5 +168,5 @@ export const orchestratorApi = createApi({
     CacheTagType.scheduledTasks,
     CacheTagType.metadataProducts,
   ],
-  keepUnusedDataFor: process.env.NEXT_PUBLIC_DISABLE_CACHE === 'true' ? 0 : 60 * 60 * 1000,
+  keepUnusedDataFor: process.env.NEXT_PUBLIC_DISABLE_CACHE === 'true' ? 0 : 60 * 60 * 5,
 });
